@@ -1,0 +1,38 @@
+import java.util.Arrays;
+
+
+// This code defines an array of leaf values to be stored in the Gem2Tree,
+// and uses the buildTree method to construct the tree. It then computes
+// the root hash of the tree using the getRootHash method, and computes the
+// query hash for the range [2, 5] using the computeQueryHash method.
+
+// Finally, it verifies the range query for the range [2, 5] using the
+// verifyRangeQuery method, and prints the result to the console.
+// It also attempts to verify an invalid range query for the range [0, 7],
+// and prints the result to the console.
+
+public class Gem2TreeDemo {
+    public static void main(String[] args) {
+        // Define the leaf values to be stored in the tree
+        int[] leafValues = { 3, 8, 1, 7, 2, 6, 4, 5 };
+        
+        // Build the Gem2Tree from the leaf values
+        Gem2Tree tree = new Gem2Tree();
+        tree.buildTree(leafValues);
+        
+        // Compute the root hash of the tree
+        byte[] rootHash = tree.getRootHash();
+        
+        // Compute the query hash for the range [2, 5]
+        byte[] queryHash = tree.computeQueryHash(2, 5);
+        
+        // Verify the range query for the range [2, 5]
+        boolean isValidQuery = tree.verifyRangeQuery(2, 5, rootHash, queryHash);
+        System.out.println("Range query for [2, 5] is valid: " + isValidQuery);
+        
+        // Attempt to verify an invalid range query for the range [0, 7]
+        byte[] invalidQueryHash = tree.computeQueryHash(0, 7);
+        boolean isInvalidQuery = tree.verifyRangeQuery(0, 7, rootHash, invalidQueryHash);
+        System.out.println("Range query for [0, 7] is valid: " + isInvalidQuery);
+    }
+}
