@@ -1,0 +1,8 @@
+public class Gem2TreeNode {
+    byte[] hash;
+    Gem2TreeNode left;
+    Gem2TreeNode right;
+    Gem2TreeNode parent;
+    boolean isGapNode;
+    int gapSize;
+}
