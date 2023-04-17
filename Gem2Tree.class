@@ -1,251 +1,136 @@
-public class Gem2Tree {
-    Gem2TreeNode root;
-    int leafCount;
-    
-    public Gem2Tree() {
-        root = null;
-        leafCount = 0;
+package Gem2Tree;
+
+import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+
+public class GEM2Tree {
+    GEM2Node root;
+    int branchingFactor;
+
+    public GEM2Tree(int minKey, int maxKey, int branchingFactor) {
+        this.branchingFactor = branchingFactor;
+        root = new GEM2Node(minKey, maxKey, false);
+        initializeChildren(root, minKey, maxKey, 1);
     }
-    
 
-//     This implementation assumes that the Gem2Tree class has a computeHash
-// method that takes a byte array as input and returns the hash value for
-// that data. The method first creates a new Gem2TreeNode object and sets
-// its properties based on the input data. If the tree is empty, the new
-// node is set as the root. Otherwise, the method traverses the tree to find
-// the parent node for the new leaf node based on its index in the tree. 
-// Once the parent node is found, the method sets the appropriate left or
-// right pointer to the new node and sets the parent pointer of the new node
-// to the parent node. Finally, the method propagates the new hash value up
-// the tree by recalculating the hash values of the parent nodes until it
-// reaches the root.
-
-    public void addLeaf(byte[] data) {
-        Gem2TreeNode newNode = new Gem2TreeNode();
-        newNode.hash = computeHash(data);
-        newNode.left = null;
-        newNode.right = null;
-        newNode.parent = null;
-        newNode.isGapNode = false;
-        newNode.gapSize = 0;
-        
-        if (root == null) {
-            root = newNode;
+    private void initializeChildren(GEM2Node node, int minKey, int maxKey, int depth) {
+        if (depth >= branchingFactor) {
+            for (int i = minKey; i <= maxKey; i++) {
+                GEM2Node child = new GEM2Node(i, i, true);
+                node.children.add(child);
+            }
         } else {
-            Gem2TreeNode current = getNodeByIndex(leafCount / 2);
-            if (leafCount % 2 == 0) {
-                current.left = newNode;
-            } else {
-                current.right = newNode;
-            }
-            newNode.parent = current;
-            
-            // Propagate the new hash value up the tree
-            current = current.parent;
-            while (current != null) {
-                current.hash = computeHash(current.left.hash, current.right.hash);
-                current = current.parent;
+            int range = (maxKey - minKey + 1) / branchingFactor;
+            for (int i = 0; i < branchingFactor; i++) {
+                int lowerBound = minKey + i * range;
+                int upperBound = (i == branchingFactor - 1) ? maxKey : (lowerBound + range - 1);
+                GEM2Node child = new GEM2Node(lowerBound, upperBound, false);
+                node.children.add(child);
+                initializeChildren(child, lowerBound, upperBound, depth + 1);
             }
         }
-        
-        leafCount++;
     }
 
+    // Insert an element into the GEM2-Tree
+    public void insert(int key, String value) {
+        GEM2Element element = new GEM2Element(key, value);
+        insert(root, element);
+    }
 
-//     This implementation assumes that the Gem2Tree class uses
-// the SHA-256 cryptographic hash function to compute hash values. 
-// The computeHash method takes a byte array as input and returns the
-// hash value of that data. The method uses the MessageDigest class
-// from the Java standard library to compute the hash value using
-// the SHA-256 algorithm.
+    private void insert(GEM2Node node, GEM2Element element) {
+        if (node.isLeaf) {
+            node.elements.add(element);
+            node.elements.sort((e1, e2) -> Integer.compare(e1.key, e2.key));
+            updateLabel(node);
+        } else {
+            GEM2Node childNode = getChildNodeForKey(node, element.key);
+            insert(childNode, element);
+            updateLabel(node);
+        }
+    }
 
-// The Gem2Tree class also has a second computeHash method that takes
-// two byte arrays as input and returns the hash value of their concatenation.
-// This method first concatenates the two input arrays into a new byte array,
-// and then computes the hash value of the concatenated value using the
-// computeHash method described above.
-    public byte[] computeHash(byte[] data) {
-        // Compute the hash value of the input data using a cryptographic hash function, such as SHA-256
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            return md.digest(data);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+    // Search for an element with a specific key
+    public GEM2Element search(int key) {
+        return search(root, key);
+    }
+
+    private GEM2Element search(GEM2Node node, int key) {
+        if (node.isLeaf) {
+            for (GEM2Element element : node.elements) {
+                if (element.key == key) {
+                    return element;
+                }
+            }
             return null;
+        } else {
+            GEM2Node childNode = getChildNodeForKey(node, key);
+            return search(childNode, key);
         }
     }
-    
-    public byte[] computeHash(byte[] left, byte[] right) {
-        // Concatenate the left and right hash values and compute the hash of the concatenated value
-        byte[] concatenated = new byte[left.length + right.length];
-        System.arraycopy(left, 0, concatenated, 0, left.length);
-        System.arraycopy(right, 0, concatenated, left.length, right.length);
-        
-        return computeHash(concatenated);
+
+    // Update the value of an element with a specific key
+    public void update(int key, String newValue) {
+        GEM2Element element = search(key);
+        if (element != null) {
+            element.value = newValue;
+            updateLabels(root);
+        }
     }
 
+    // Delete an element with a specific key
+    public void delete(int key) {
+        delete(root, key);
+    }
 
-//     This implementation assumes that the Gem2Tree class has
-// a getNodeByIndex method that takes an index value and returns
-// the corresponding node in the tree. The buildTree method first
-// initializes the leaf nodes by adding them to the tree using
-// the addLeaf method described earlier.
-
-// Once the leaf nodes are initialized, the method iteratively
-// builds the internal nodes of the tree by traversing the tree
-// from the bottom up. For each internal node, the method creates
-// a new Gem2TreeNode object and sets its properties based on the
-// hash values and child nodes of the current node. The method also
-// updates the parent and child pointers of the current node and its
-// parent to point to the new parent node.  Finally, the method updates
-// the current variable to the parent of the current node, and repeats
-// the process until the root node is reached.
-
-    public Gem2TreeNode buildTree() {
-
-        // Initialize the leaf nodes
-        for (byte[] data : dataList) {
-            addLeaf(data);
+    private void delete(GEM2Node node, int key) {
+        if (node.isLeaf) {
+            node.elements.removeIf(element -> element.key == key);
+            updateLabel(node);
+        } else {
+            GEM2Node childNode = getChildNodeForKey(node, key);
+            delete(childNode, key);
+            updateLabel(node);
         }
-        
-        // Build the internal nodes
-        Gem2TreeNode current = getNodeByIndex(0);
-        while (current != root) {
-            Gem2TreeNode parent = new Gem2TreeNode();
-            parent.hash = computeHash(current.left.hash, current.right.hash);
-            parent.left = current.left;
-            parent.right = current.right;
-            parent.parent = current.parent;
-            current.parent = parent;
-            
-            if (parent.parent.left == current) {
-                parent.parent.left = parent;
-            } else {
-                parent.parent.right = parent;
+    }
+
+    // Update labels recursively from the current node to its children
+    private void updateLabels(GEM2Node node) {
+        if (node.isLeaf) {
+            updateLabel(node);
+        } else {
+            for (GEM2Node childNode : node.children) {
+                updateLabels(childNode);
             }
-            
-            current = parent.parent;
+            updateLabel(node);
         }
     }
-    
-    public Gem2TreeNode getRoot() {
-        return root;
-    }
-    
-//     This implementation assumes that the Gem2Tree class
-// has a Gem2TreeNode class that represents a node in the tree.
-// The getNodeByIndex method takes an index value as input and
-// returns the corresponding node in the tree.
 
-// The method first computes the path to the node with the given
-// index by repeatedly dividing the index value by 2 and adding a
-// boolean value to a list to represent whether to follow the left
-// or right child at each level of the tree. Once the path is computed,
-// the method traverses the tree along the path to the desired node by
-// starting at the root and following the left or right child at each
-// level of the tree as specified by the path.
-
-    public Gem2TreeNode getNodeByIndex(int index) {
-        
-        // Compute the path to the node with the given index
-        List<Boolean> path = new ArrayList<>();
-        while (index > 0) {
-            path.add(index % 2 == 1);
-            index = (index - 1) / 2;
+    // Update label for a specific node
+    private void updateLabel(GEM2Node node) {
+        if (node.isLeaf) {
+            StringBuilder sb = new StringBuilder();
+            for (GEM2Element element : node.elements) {
+                sb.append(element.key).append(element.value);
+            }
+            node.label = Utils.hash(sb.toString());
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (GEM2Node childNode : node.children) {
+                sb.append(childNode.label);
+            }
+            node.label = Utils.hash(sb.toString());
         }
-        
-        // Traverse the tree along the path to the desired node
-        Gem2TreeNode current = root;
-        for (int i = path.size() - 1; i >= 0; i--) {
-            if (path.get(i)) {
-                current = current.right;
-            } else {
-                current = current.left;
+    }
+
+    // Get the appropriate child node for the specified key
+    private GEM2Node getChildNodeForKey(GEM2Node node, int key) {
+        for (GEM2Node childNode : node.children) {
+            if (childNode.lowerBound <= key && key <= childNode.upperBound) {
+                return childNode;
             }
         }
-        
-        return current;
+        return null;
     }
-    
-//     This implementation assumes that the Gem2Tree class has
-// a Gem2TreeNode class that represents a node in the tree. 
-// The getGapNodeByIndex method takes an index value as input
-// and returns the corresponding gap node in the tree, if any.
-
-// The method first computes the path to the node with the given
-// index by repeatedly dividing the index value by 2 and adding a boolean
-// value to a list to represent whether to follow the left or right child
-// at each level of the tree. Once the path is computed, the method traverses
-// the tree along the path to the desired node, skipping over any gap nodes
-// as necessary.
-
-// If the current node has a gap node child in the direction specified by
-// the path, the method follows the other child instead. If the current node
-// is itself a gap node, the method returns the current node. If the path is
-// invalid (i.e., does not lead to a valid node in the tree), the method returns null.
-
-    public Gem2TreeNode getGapNodeByIndex(int index) {
-        // Compute the path to the node with the given index
-        List<Boolean> path = new ArrayList<>();
-        while (index > 0) {
-            path.add(index % 2 == 1);
-            index = (index - 1) / 2;
-        }
-        
-        // Traverse the tree along the path to the desired node, skipping over any gap nodes
-        Gem2TreeNode current = root;
-        for (int i = path.size() - 1; i >= 0; i--) {
-            if (path.get(i)) {
-                if (current.right.isGapNode()) {
-                    current = current.left;
-                } else {
-                    current = current.right;
-                }
-            } else {
-                if (current.left.isGapNode()) {
-                    current = current.right;
-                } else {
-                    current = current.left;
-                }
-            }
-        }
-        
-        return current;
-    }
-    
-//     This implementation assumes that the Gem2Tree class has
-// a Gem2TreeNode class that represents a node in the tree,
-// and that there is a utility class HashUtils with a method
-// sha256Hash that computes the SHA-256 hash of two byte
-// arrays concatenated together.
-
-// The verifyRangeQuery method takes a start index, an end index,
-// a root hash value, and a query hash value as input, and returns
-// a boolean value indicating whether the query hash value is valid
-// for the specified range of leaf nodes in the tree.
-
-// The method first retrieves the start and end nodes for the given
-// range by calling the getGapNodeByIndex method on the start and end
-// indices, respectively. It then computes the root hash of the sub-tree
-// corresponding to the given range by calling the computeSubTreeHash
-// method on the start and end nodes.
-
-// Finally, the method computes the expected hash value for the given
-// range by concatenating the root hash value with the sub-tree hash value,
-// and computing the SHA-256 hash of the concatenated byte array using the
-// sha256Hash method. It then compares the expected hash value to the query
-// hash value, and returns true if they are equal and false otherwise.
-
-    public boolean verifyRangeQuery(byte[] rangeStart, byte[] rangeEnd, byte[] proof) {
-        // Retrieve the start and end nodes for the given range
-        Gem2TreeNode startNode = getGapNodeByIndex(start);
-        Gem2TreeNode endNode = getGapNodeByIndex(end);
-        
-        // Compute the root hash of the sub-tree corresponding to the given range
-        byte[] subTreeHash = computeSubTreeHash(startNode, endNode);
-        
-        // Verify that the computed sub-tree hash matches the expected query hash
-        byte[] expectedHash = HashUtils.sha256Hash(rootHash, subTreeHash);
-        return Arrays.equals(expectedHash, queryHash);
-    }
+   
 }

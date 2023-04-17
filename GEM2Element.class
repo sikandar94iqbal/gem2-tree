@@ -1,0 +1,11 @@
+package Gem2Tree;
+
+public class GEM2Element {
+    int key;
+    String value;
+
+    GEM2Element(int key, String value) {
+        this.key = key;
+        this.value = value;
+    }
+}

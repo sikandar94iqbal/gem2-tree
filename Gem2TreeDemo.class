@@ -1,38 +1,48 @@
-import java.util.Arrays;
+package Gem2Tree;
 
+import java.util.List;
 
-// This code defines an array of leaf values to be stored in the Gem2Tree,
-// and uses the buildTree method to construct the tree. It then computes
-// the root hash of the tree using the getRootHash method, and computes the
-// query hash for the range [2, 5] using the computeQueryHash method.
+public class GEM2TreeDemo {
+	   public static void main(String[] args) {
+	        // Create a new GEM2-Tree with a key range from 0 to 100
+		    GEM2Tree tree = new GEM2Tree(0, 100, 4);
 
-// Finally, it verifies the range query for the range [2, 5] using the
-// verifyRangeQuery method, and prints the result to the console.
-// It also attempts to verify an invalid range query for the range [0, 7],
-// and prints the result to the console.
+	        // Insert key-value pairs into the GEM2-Tree
+	        tree.insert(10, "Alice");
+	        tree.insert(30, "Bob");
+	        tree.insert(50, "Carol");
+	        tree.insert(70, "David");
 
-public class Gem2TreeDemo {
-    public static void main(String[] args) {
-        // Define the leaf values to be stored in the tree
-        int[] leafValues = { 3, 8, 1, 7, 2, 6, 4, 5 };
-        
-        // Build the Gem2Tree from the leaf values
-        Gem2Tree tree = new Gem2Tree();
-        tree.buildTree(leafValues);
-        
-        // Compute the root hash of the tree
-        byte[] rootHash = tree.getRootHash();
-        
-        // Compute the query hash for the range [2, 5]
-        byte[] queryHash = tree.computeQueryHash(2, 5);
-        
-        // Verify the range query for the range [2, 5]
-        boolean isValidQuery = tree.verifyRangeQuery(2, 5, rootHash, queryHash);
-        System.out.println("Range query for [2, 5] is valid: " + isValidQuery);
-        
-        // Attempt to verify an invalid range query for the range [0, 7]
-        byte[] invalidQueryHash = tree.computeQueryHash(0, 7);
-        boolean isInvalidQuery = tree.verifyRangeQuery(0, 7, rootHash, invalidQueryHash);
-        System.out.println("Range query for [0, 7] is valid: " + isInvalidQuery);
-    }
+	        // Search for elements by key
+	        GEM2Element element = tree.search(30);
+	        if (element != null) {
+	            System.out.println("Element found: Key = " + element.key + ", Value = " + element.value);
+	        } else {
+	            System.out.println("Element not found.");
+	        }
+
+	        // Update the value of an element with a specific key
+	        tree.update(30, "Robert");
+
+	        // Search for the updated element by key
+	        element = tree.search(30);
+	        if (element != null) {
+	            System.out.println("Element found: Key = " + element.key + ", Value = " + element.value);
+	        } else {
+	            System.out.println("Element not found.");
+	        }
+
+	        // Delete an element by key
+	        tree.delete(30);
+
+	        // Search for the deleted element by key
+	        element = tree.search(30);
+	        if (element != null) {
+	            System.out.println("Element found: Key = " + element.key + ", Value = " + element.value);
+	        } else {
+	            System.out.println("Element not found.");
+	        }
+	        
+	     
+	    }
 }

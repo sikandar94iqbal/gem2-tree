@@ -1,0 +1,26 @@
+package Gem2Tree;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.List;
+
+public class GEM2Node {
+    boolean isLeaf;
+    int lowerBound;
+    int upperBound;
+    String label;
+    List<GEM2Node> children;
+    List<GEM2Element> elements;
+
+    GEM2Node(int lowerBound, int upperBound, boolean isLeaf) {
+        this.lowerBound = lowerBound;
+        this.upperBound = upperBound;
+        this.isLeaf = isLeaf;
+        this.label = "";
+        if (isLeaf) {
+            elements = new ArrayList<>();
+        } else {
+            children = new ArrayList<>();
+        }
+    }
+}
